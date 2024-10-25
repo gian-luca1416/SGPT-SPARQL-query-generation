@@ -144,8 +144,8 @@ def train(args, train_dataset, eval_dataset, model: PreTrainedModel, tokenizer: 
 
             logger.info("Saving model checkpoint to %s", output_dir)
             global_eval=results["loss"]
-            model_to_save.save_pretrained(output_dir)
-            tokenizer.save_pretrained(output_dir)
+            model_to_save.save_pretrained(output_dir, safe_serialization=False)
+            tokenizer.save_pretrained(output_dir, safe_serialization=False)
 
             torch.save(args, os.path.join(output_dir, "training_args.bin"))
             with open(os.path.join(output_dir, "params.json"), "w") as jsonfile:
@@ -241,8 +241,8 @@ def main():
                         help="Name of the experiment, checkpoints will be stored in runs/{exp_name}")
     parser.add_argument("--eval_desc", type=str, default="",
                         help="Optional description to be listed in eval_results.txt")
-    parser.add_argument("--device", type=str, default="cuda" if torch.cuda.is_available() else "cpu",
-                        help="Device (cuda or cpu)")
+    parser.add_argument("--device", type=str, default="cuda" if torch.cuda.is_available() else "mps",
+                        help="Device (cuda or mps)")
     parser.add_argument("--local_rank", type=int, default=-1, help="Local rank for distributed training (-1: not distributed)")
     args = parser.parse_args()
 
@@ -286,7 +286,7 @@ def main():
     # Setup CUDA, GPU & distributed training
     args.distributed = (args.local_rank != -1)
     if not args.distributed:
-        device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+        device = torch.device("cuda:0" if torch.cuda.is_available() else "mps")
     else:  # Initializes the distributed backend which will take care of sychronizing nodes/GPUs
         torch.cuda.set_device(args.local_rank)
         device = torch.device("cuda", args.local_rank)
@@ -336,8 +336,8 @@ def main():
             model_to_save = (
                 model.module if hasattr(model, "module") else model
             )  # Take care of distributed/parallel training
-            model_to_save.save_pretrained(args.output_dir)
-            tokenizer.save_pretrained(args.output_dir)
+            model_to_save.save_pretrained(args.output_dir, safe_serialization=False)
+            tokenizer.save_pretrained(args.output_dir, safe_serialization=False)
 
             # Good practice: save your training arguments together with the trained model
             torch.save(args, os.path.join(args.output_dir, "training_args.bin"))

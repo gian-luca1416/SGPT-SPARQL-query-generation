@@ -2,4 +2,5 @@
 .DS_Store
 config/.DS_Store
 utils/__pycache__/*
-scripts/__pychache__/*
+scripts/__pycache__/*
+sgpt

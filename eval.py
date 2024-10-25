@@ -200,8 +200,8 @@ def main():
     parser.add_argument("--output_file", type=str, default="", help="Predictions will be written to this file.")
     parser.add_argument("--eval_desc", type=str, default="",
                         help="Optional description to be listed in eval_results.txt")
-    parser.add_argument("--device", type=str, default="cuda" if torch.cuda.is_available() else "cpu",
-                        help="Device (cuda or cpu)")
+    parser.add_argument("--device", type=str, default="cuda" if torch.cuda.is_available() else "mps",
+                        help="Device (cuda or mps)")
     parser.add_argument("--local_rank", type=int, default=-1,
                         help="Local rank for distributed training (-1: not distributed)")
     args = parser.parse_args()
@@ -242,7 +242,7 @@ def main():
     # Setup CUDA, GPU & distributed training
     args.distributed = (args.local_rank != -1)
     if not args.distributed:
-        device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+        device = torch.device("cuda:0" if torch.cuda.is_available() else "mps")
     else:  # Initializes the distributed backend which will take care of sychronizing nodes/GPUs
         torch.cuda.set_device(args.local_rank)
         device = torch.device("cuda", args.local_rank)

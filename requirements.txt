@@ -4,5 +4,5 @@ optuna-dashboard
 transformers
 tensorboardx
 nltk
-torch==1.13.1
+torch
 spacy
