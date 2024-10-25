@@ -31,6 +31,8 @@ except ImportError:
     from tensorboardX import SummaryWriter
 logger = logging.getLogger(__name__)
 
+from transformers import LlamaForCausalLM, LlamaTokenizer
+
 
 def set_seed(args):
     random.seed(args.seed)
@@ -276,7 +278,8 @@ def main():
         args.num_train_epochs = fromcommand.epochs
 
 
-    tokenizer = AutoTokenizer.from_pretrained(args.model_name_or_path)
+    #tokenizer = AutoTokenizer.from_pretrained(args.model_name_or_path)
+    tokenizer = AutoTokenizer.from_pretrained(args.llama_output_path)
     set_default_params(args)
     dataset_args = Namespace(**args.dataset_args)
     dataset_args.task = args.task
@@ -302,13 +305,16 @@ def main():
     if args.eval_only:
         pass
     else:
-        config = AutoConfig.from_pretrained(args.model_name_or_path)
+        #config = AutoConfig.from_pretrained(args.model_name_or_path)
+        config = AutoConfig.from_pretrained(args.llama_output_path)
         # set output_past to False for DataParallel to work during evaluation
         config.output_past = False
         config.knowledge_max_tokens = dataset_args.knowledge_max_tokens
-        tokenizer = AutoTokenizer.from_pretrained(args.model_name_or_path)
+        #tokenizer = AutoTokenizer.from_pretrained(args.model_name_or_path)
+        tokenizer = AutoTokenizer.from_pretrained(args.llama_output_path)
         tokenizer.add_special_tokens(SPECIAL_TOKENS)
-        model = model_class.from_pretrained(args.model_name_or_path, config=config)
+        #model = model_class.from_pretrained(args.model_name_or_path, config=config)
+        model = model_class.from_pretrained(args.llama_output_path, config=config)
         model.resize_token_embeddings(len(tokenizer))
 
     model.to(args.device)

@@ -11,6 +11,8 @@ from transformers.models.gpt2 import GPT2PreTrainedModel
 logger = logging.getLogger(__name__)
 import json
 
+from transformers import LlamaForCausalLM, LlamaTokenizer
+
 
 GPT2_PRETRAINED_MODEL_ARCHIVE_LIST = [
     "gpt2",
@@ -50,19 +52,19 @@ class Attention(nn.Module):
 
         n_state = nx  # in Attention: n_state=768 (nx=n_embd)
         # [switch nx => n_state from Block to Attention to keep identical to TF implem]
-        assert n_state % config.n_head == 0
+        assert n_state % config.num_attention_heads == 0
         self.register_buffer(
             "bias", torch.tril(torch.ones((n_ctx, n_ctx), dtype=torch.uint8)).view(1, 1, n_ctx, n_ctx)
         )
         self.register_buffer("masked_bias", torch.tensor(-1e4))
-        self.n_head = config.n_head
+        self.n_head = config.num_attention_heads
         self.split_size = n_state
         self.scale = scale
 
         self.c_attn = Conv1D(n_state * 3, nx)
         self.c_proj = Conv1D(n_state, nx)
-        self.attn_dropout = nn.Dropout(config.attn_pdrop)
-        self.resid_dropout = nn.Dropout(config.resid_pdrop)
+        self.attn_dropout = nn.Dropout(config.attention_dropout)
+        self.resid_dropout = nn.Dropout(0.1) # TODO find in config
         self.pruned_heads = set()
 
     def prune_heads(self, heads):
@@ -152,11 +154,11 @@ class Attention(nn.Module):
 class MLP(nn.Module):
     def __init__(self, n_state, config):  # in MLP: n_state=3072 (4 * n_embd)
         super().__init__()
-        nx = config.n_embd
+        nx = config.hidden_size
         self.c_fc = Conv1D(n_state, nx)
         self.c_proj = Conv1D(nx, n_state)
-        self.act = ACT2FN[config.activation_function]
-        self.dropout = nn.Dropout(config.resid_pdrop)
+        self.act = ACT2FN[config.hidden_act]
+        self.dropout = nn.Dropout(0.1) # TODO find in config
 
     def forward(self, x):
         h = self.act(self.c_fc(x))
@@ -167,10 +169,10 @@ class MLP(nn.Module):
 class Block(nn.Module):
     def __init__(self, n_ctx, config, scale=False):
         super().__init__()
-        nx = config.n_embd
-        self.ln_1 = nn.LayerNorm(nx, eps=config.layer_norm_epsilon)
+        nx = config.hidden_size
+        self.ln_1 = nn.LayerNorm(nx, eps=config.rms_norm_eps)
         self.attn = Attention(nx, n_ctx, config, scale)
-        self.ln_2 = nn.LayerNorm(nx, eps=config.layer_norm_epsilon)
+        self.ln_2 = nn.LayerNorm(nx, eps=config.rms_norm_eps)
         self.mlp = MLP(4 * nx, config)
 
     def forward(
@@ -337,18 +339,19 @@ class PositionwiseFeedForward(nn.Module):
         return output
 
 
-class GPT2Model(GPT2PreTrainedModel):
+class GPT2Model(LlamaForCausalLM):
     def __init__(self, config=None):
         super().__init__(config)
-        self.wte = nn.Embedding(config.vocab_size, config.n_embd)
-        self.wpe = nn.Embedding(config.n_positions, config.n_embd)
-        self.pose = nn.Embedding(50, config.n_embd)
-        self.dep = nn.Embedding(50, config.n_embd)
-        self.depl = nn.Embedding(50, config.n_embd)
+        self.wte = nn.Embedding(config.vocab_size, config.hidden_size)
+        self.wpe = nn.Embedding(config.max_position_embeddings, config.hidden_size)
+        self.pose = nn.Embedding(50, config.hidden_size)
+        self.dep = nn.Embedding(50, config.hidden_size)
+        self.depl = nn.Embedding(50, config.hidden_size)
         #self.kge = KGBlock(config=config)
-        self.drop = nn.Dropout(config.embd_pdrop)
-        self.h = nn.ModuleList([Block(config.n_ctx, config, scale=True) for _ in range(config.n_layer)])
-        self.ln_f = nn.LayerNorm(config.n_embd, eps=config.layer_norm_epsilon)
+        #self.drop = nn.Dropout(config.embd_pdrop)
+        self.drop = nn.Dropout(0.1) # TODO find it in config
+        self.h = nn.ModuleList([Block(config.max_position_embeddings, config, scale=True) for _ in range(config.num_hidden_layers)])
+        self.ln_f = nn.LayerNorm(config.hidden_size, eps=config.rms_norm_eps)
         n_head = 8
         n_layers = 6
         self.pad_idx = 50257
@@ -486,7 +489,7 @@ class GPT2Model(GPT2PreTrainedModel):
         # 1.0 in head_mask indicate we keep the head
         # attention_probs has shape bsz x n_heads x N x N
         # head_mask has shape n_layer x batch x n_heads x N x N
-        head_mask = self.get_head_mask(head_mask, self.config.n_layer)
+        head_mask = self.get_head_mask(head_mask, self.config.num_hidden_layers)
 
 
         if inputs_embeds is None:
@@ -560,11 +563,11 @@ class GPT2Model(GPT2PreTrainedModel):
 
 
 
-class GPT2LMHeadModel(GPT2PreTrainedModel):
+class GPT2LMHeadModel(LlamaForCausalLM):
     def __init__(self, config=None):
         super().__init__(config=config)
         self.transformer = GPT2Model(config=config)
-        self.lm_head = nn.Linear(config.n_embd, config.vocab_size, bias=False)
+        self.lm_head = nn.Linear(config.hidden_size, config.vocab_size, bias=False)
 
         self.init_weights()
 

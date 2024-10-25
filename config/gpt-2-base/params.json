@@ -4,7 +4,7 @@
       "knowledge_max_tokens": 50
     },
     "task": "generation",
-    "model_name_or_path": "gpt2",
+    "llama_output_path": "../llama",
     "per_gpu_train_batch_size": 4,
     "per_gpu_eval_batch_size": 4,
     "gradient_accumulation_steps": 4,

@@ -6,3 +6,8 @@ tensorboardx
 nltk
 torch
 spacy
+tiktoken
+sentencepiece
+protobuf
+blobfile
+accelerate>=0.26.0

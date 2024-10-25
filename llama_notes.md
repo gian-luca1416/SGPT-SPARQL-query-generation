@@ -1,0 +1,4 @@
+- get access to llama
+- download model
+- convert parameters to huggingface
+- use python3.11
