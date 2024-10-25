@@ -258,8 +258,8 @@ def main():
         torch.distributed.barrier()  # Barrier to make sure only the first process in distributed training download model & vocab
 
     args.output_dir = args.checkpoint
-    tokenizer = AutoTokenizer.from_pretrained(args.checkpoint)
-    model = GPT2LMHeadModel.from_pretrained(args.checkpoint)
+    tokenizer = AutoTokenizer.from_pretrained(args.checkpoint, ignore_mismatched_sizes=True)
+    model = GPT2LMHeadModel.from_pretrained(args.checkpoint, ignore_mismatched_sizes=True)
     model.to(args.device)
 
     if args.local_rank == 0:

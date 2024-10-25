@@ -146,8 +146,8 @@ def train(args, train_dataset, eval_dataset, model: PreTrainedModel, tokenizer: 
 
             logger.info("Saving model checkpoint to %s", output_dir)
             global_eval=results["loss"]
-            model_to_save.save_pretrained(output_dir, safe_serialization=False)
-            tokenizer.save_pretrained(output_dir, safe_serialization=False)
+            model_to_save.save_pretrained(output_dir, safe_serialization=True)
+            tokenizer.save_pretrained(output_dir, safe_serialization=True)
 
             torch.save(args, os.path.join(output_dir, "training_args.bin"))
             with open(os.path.join(output_dir, "params.json"), "w") as jsonfile:
@@ -342,8 +342,8 @@ def main():
             model_to_save = (
                 model.module if hasattr(model, "module") else model
             )  # Take care of distributed/parallel training
-            model_to_save.save_pretrained(args.output_dir, safe_serialization=False)
-            tokenizer.save_pretrained(args.output_dir, safe_serialization=False)
+            model_to_save.save_pretrained(args.output_dir, safe_serialization=True)
+            tokenizer.save_pretrained(args.output_dir, safe_serialization=True)
 
             # Good practice: save your training arguments together with the trained model
             torch.save(args, os.path.join(args.output_dir, "training_args.bin"))
@@ -351,8 +351,8 @@ def main():
                 json.dump(params, jsonfile, indent=2)
 
             # Load a trained model and vocabulary that you have fine-tuned
-            model = model_class.from_pretrained(args.output_dir)
-            tokenizer = AutoTokenizer.from_pretrained(args.output_dir,)
+            model = model_class.from_pretrained(args.output_dir, ignore_mismatched_sizes=True)
+            tokenizer = AutoTokenizer.from_pretrained(args.output_dir, ignore_mismatched_sizes=True)
             model.to(args.device)
 
     # Evaluation

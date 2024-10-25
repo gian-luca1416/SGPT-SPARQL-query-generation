@@ -2,3 +2,4 @@
 - download model
 - convert parameters to huggingface
 - use python3.11
+- why shape mismatch?
