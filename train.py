@@ -188,8 +188,8 @@ def evaluate(args, eval_dataset, model: PreTrainedModel, tokenizer: PreTrainedTo
     for batch in tqdm(eval_dataloader, desc="Evaluating", disable=args.local_rank not in [-1, 0]):
         with torch.no_grad():
             loss, lm_logits, mc_logits, mc_labels = run_batch_fn(args, model, batch)
-            all_preds.append(mc_logits.detach().cpu().numpy())
-            all_labels.append(mc_labels.detach().cpu().numpy())
+            all_preds.append(mc_logits.detach().mps().numpy())
+            all_labels.append(mc_labels.detach().mps().numpy())
             eval_loss += loss.mean().item()
         nb_eval_steps += 1
 

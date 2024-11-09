@@ -354,7 +354,7 @@ class GPT2Model(LlamaForCausalLM):
         self.ln_f = nn.LayerNorm(config.hidden_size, eps=config.rms_norm_eps)
         n_head = 8
         n_layers = 6
-        self.pad_idx = 50257
+        self.pad_idx = config.vocab_size
         d_k = config.hidden_size // n_head
         d_v = config.hidden_size // n_head
         d_inner = config.hidden_size * 4
@@ -493,6 +493,7 @@ class GPT2Model(LlamaForCausalLM):
 
 
         if inputs_embeds is None:
+            input_ids = torch.clamp(input_ids, max=128256 - 1)
             inputs_embeds = self.wte(input_ids)
         position_ids = position_ids.view(-1, input_shape[-1])
         position_embeds = self.wpe(position_ids)
@@ -638,11 +639,11 @@ class GPT2LMHeadModel(LlamaForCausalLM):
 def run_batch_generation(args, model, batch):
     batch = tuple(input_tensor.long().to(args.device) for input_tensor in batch)
     input_ids, pos_ids, postag_ids, dep_ids, dep_lvl, lm_labels = batch
-    #print("input_ids: ",input_ids.size(), input_ids)
-    #print("postag_ids: ",postag_ids.size(),postag_ids)
-    #print("dep_ids: ",dep_ids.size(),dep_ids)
-    #print("dep lvl: ",dep_lvl.size(),dep_lvl)
-    #print("lm_lables: ",lm_labels.size(), lm_labels)
+    # print("input_ids: ",input_ids.size(), input_ids)
+    # print("postag_ids: ",postag_ids.size(),postag_ids)
+    # print("dep_ids: ",dep_ids.size(),dep_ids)
+    # print("dep lvl: ",dep_lvl.size(),dep_lvl)
+    # print("lm_lables: ",lm_labels.size(), lm_labels)
     model_outputs = model(input_ids=input_ids, postag_ids=postag_ids, position_ids=None, dep_ids=dep_ids, dep_lvl=dep_lvl, labels=lm_labels)
     loss = model_outputs[0]
     lm_logits = model_outputs[1]
