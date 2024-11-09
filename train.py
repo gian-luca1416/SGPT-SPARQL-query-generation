@@ -41,7 +41,7 @@ def set_seed(args):
 
 def train(args, train_dataset, eval_dataset, model: PreTrainedModel, tokenizer: PreTrainedTokenizer, run_batch_fn_train, run_batch_fn_eval) -> Tuple[int, float]:
     if args.local_rank in [-1, 0]:
-        log_dir = os.path.join("runs", args.exp_name, args.dataset) if args.exp_name else None
+        log_dir = os.path.join(args.output_dir, args.exp_name, args.dataset) if args.exp_name else None
         tb_writer = SummaryWriter(log_dir)
         args.output_dir = log_dir
     args.train_batch_size = args.per_gpu_train_batch_size * max(1, args.n_gpu)
@@ -244,6 +244,7 @@ def main():
     parser.add_argument("--device", type=str, default="cuda" if torch.cuda.is_available() else "mps",
                         help="Device (cuda or mps)")
     parser.add_argument("--local_rank", type=int, default=-1, help="Local rank for distributed training (-1: not distributed)")
+    parser.add_argument("--output_dir", type=str, default="runs", help="Output directory for checkpoints and predictions")
     args = parser.parse_args()
 
     # Setup logging
