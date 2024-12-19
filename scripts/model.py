@@ -64,7 +64,7 @@ class Attention(nn.Module):
         self.c_attn = Conv1D(n_state * 3, nx)
         self.c_proj = Conv1D(n_state, nx)
         self.attn_dropout = nn.Dropout(config.attention_dropout)
-        self.resid_dropout = nn.Dropout(0.1) # TODO find in config
+        self.resid_dropout = nn.Dropout(0.1)
         self.pruned_heads = set()
 
     def prune_heads(self, heads):
@@ -158,7 +158,7 @@ class MLP(nn.Module):
         self.c_fc = Conv1D(n_state, nx)
         self.c_proj = Conv1D(nx, n_state)
         self.act = ACT2FN[config.hidden_act]
-        self.dropout = nn.Dropout(0.1) # TODO find in config
+        self.dropout = nn.Dropout(0.1)
 
     def forward(self, x):
         h = self.act(self.c_fc(x))
@@ -339,7 +339,7 @@ class PositionwiseFeedForward(nn.Module):
         return output
 
 
-class GPT2Model(LlamaForCausalLM):
+class LlamaModel(LlamaForCausalLM):
     def __init__(self, config=None):
         super().__init__(config)
         self.wte = nn.Embedding(128263, config.hidden_size) #128263 for lcquad, 128261 for qald
@@ -348,9 +348,10 @@ class GPT2Model(LlamaForCausalLM):
         self.dep = nn.Embedding(50, config.hidden_size)
         self.depl = nn.Embedding(50, config.hidden_size)
         #self.kge = KGBlock(config=config)
-        #self.drop = nn.Dropout(config.embd_pdrop)
-        self.drop = nn.Dropout(0.1) # TODO find it in config
-        self.h = nn.ModuleList([Block(config.max_position_embeddings, config, scale=True) for _ in range(config.num_hidden_layers)])
+        # self.drop = nn.Dropout(config.embd_pdrop)
+        self.drop = nn.Dropout(0.1)
+        self.h = nn.ModuleList(
+            [Block(config.max_position_embeddings, config, scale=True) for _ in range(config.num_hidden_layers)])
         self.ln_f = nn.LayerNorm(config.hidden_size, eps=config.rms_norm_eps)
         n_head = 32
         n_layers = 16
@@ -564,10 +565,10 @@ class GPT2Model(LlamaForCausalLM):
 
 
 
-class GPT2LMHeadModel(LlamaForCausalLM):
+class LlamaLMHeadModel(LlamaForCausalLM):
     def __init__(self, config=None):
         super().__init__(config=config)
-        self.transformer = GPT2Model(config=config)
+        self.transformer = LlamaModel(config=config)
         self.lm_head = nn.Linear(config.hidden_size, config.vocab_size, bias=False)
 
         self.init_weights()
@@ -599,7 +600,6 @@ class GPT2LMHeadModel(LlamaForCausalLM):
         output_hidden_states=None,
         decode_mode = "train"
     ):
-
         transformer_outputs = self.transformer(
             input_ids,
             past=past,
@@ -639,11 +639,11 @@ class GPT2LMHeadModel(LlamaForCausalLM):
 def run_batch_generation(args, model, batch):
     batch = tuple(input_tensor.long().to(args.device) for input_tensor in batch)
     input_ids, pos_ids, postag_ids, dep_ids, dep_lvl, lm_labels = batch
-    # print("input_ids: ",input_ids.size(), input_ids)
-    # print("postag_ids: ",postag_ids.size(),postag_ids)
-    # print("dep_ids: ",dep_ids.size(),dep_ids)
-    # print("dep lvl: ",dep_lvl.size(),dep_lvl)
-    # print("lm_lables: ",lm_labels.size(), lm_labels)
+    #print("input_ids: ",input_ids.size(), input_ids)
+    #print("postag_ids: ",postag_ids.size(),postag_ids)
+    #print("dep_ids: ",dep_ids.size(),dep_ids)
+    #print("dep lvl: ",dep_lvl.size(),dep_lvl)
+    #print("lm_lables: ",lm_labels.size(), lm_labels)
     model_outputs = model(input_ids=input_ids, postag_ids=postag_ids, position_ids=None, dep_ids=dep_ids, dep_lvl=dep_lvl, labels=lm_labels)
     loss = model_outputs[0]
     lm_logits = model_outputs[1]
@@ -706,6 +706,7 @@ def decode_sample(args, model, batch, dataset):       # decoding function
         #print(instance["dep_ids"])
         dep_ids = torch.tensor(instance["dep_ids"], device=args.device).unsqueeze(0)
         deplvl = torch.tensor(instance["dep_lvl"], device=args.device).unsqueeze(0)
+
         #GPT2(nput_ids=input_ids , entity_ids = ent_ids)
         model_outputs = model(input_ids=input_ids, postag_ids=postag_ids, dep_ids=dep_ids, dep_lvl=deplvl, position_ids=None)
         logits = model_outputs[0]
@@ -727,4 +728,3 @@ def decode_sample(args, model, batch, dataset):       # decoding function
         current_output.append(prev.item())          # we append each token to the already decoded tokenlist (current_output), which work as an input for decoding the next token
 
     return current_output, response_text, "", knowledge_text
-

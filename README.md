@@ -29,7 +29,7 @@ python train.py --dataset lcquad2 --epochs 40
 
 ### 🎯 Evaluation
 ```
-python -u eval.py --generate runs/sgpt/lcquad2/ --dataset lcquad2 --generation_params_file config/gpt-2-base/generation_params.json --eval_dataset test  --output_file outputs/predictions_gpt2-base.json
+python -u eval.py --generate runs/sgpt/lcquad2/ --dataset lcquad2 --generation_params_file config/llama-base/generation_params.json --eval_dataset test  --output_file outputs/predictions_gpt2-base.json
 ```
 
 ### 🎲 Hyper-paramters

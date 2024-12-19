@@ -15,7 +15,7 @@ from transformers import (
      get_linear_schedule_with_warmup,
 )
 
-from scripts.model import run_batch_generation, GPT2LMHeadModel
+from scripts.model import run_batch_generation, LlamaLMHeadModel
 
 import os
 from utils.args import (
@@ -215,7 +215,7 @@ def main():
     parser = argparse.ArgumentParser()
 
     # Required parameters
-    parser.add_argument("--params_file", type=str, default="config/gpt-2-base/params.json", help="JSON configuration file")
+    parser.add_argument("--params_file", type=str, default="config/llama-base/params.json", help="JSON configuration file")
     parser.add_argument("--eval_only", action="store_true",
                         help="Perform evaluation only")
     parser.add_argument("--checkpoint", type=str, help="Saved checkpoint directory")
@@ -300,7 +300,7 @@ def main():
     set_seed(args)
     args.train_batch_size = 2
 
-    dataset_class, model_class, run_batch_fn_train, run_batch_fn_eval = Dataset, GPT2LMHeadModel, run_batch_generation, run_batch_generation
+    dataset_class, model_class, run_batch_fn_train, run_batch_fn_eval = Dataset, LlamaLMHeadModel, run_batch_generation, run_batch_generation
 
     if args.eval_only:
         pass

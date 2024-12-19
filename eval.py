@@ -15,7 +15,7 @@ from torch.utils.data import DataLoader, RandomSampler, SequentialSampler
 from torch.utils.data.distributed import DistributedSampler
 from tqdm import tqdm, trange
 from transformers import AutoTokenizer
-from scripts.model import GPT2LMHeadModel
+from scripts.model import LlamaLMHeadModel
 
 from utils.args import update_additional_params
 from scripts.model import decode_sample
@@ -191,7 +191,7 @@ def main():
     parser.add_argument("--decode", type=str, default="basic", choices=["basic","beam"], help="decoding technique")
     parser.add_argument('--dataset', type=str, default='lcquad2', choices=['lcquad2','qald9','vquanda'])
     parser.add_argument('--knowledge', action='store_true')
-    parser.add_argument("--generation_params_file", type=str, default="config/gpt-2-base/generation_params.json",
+    parser.add_argument("--generation_params_file", type=str, default="config/llama-base/generation_params.json",
                         help="JSON configuration file for generation-related configurations.")
     parser.add_argument("--dataroot", type=str, default="data",
                         help="Path to dataset, will override the path in config.")
@@ -259,7 +259,7 @@ def main():
 
     args.output_dir = args.checkpoint
     tokenizer = AutoTokenizer.from_pretrained(args.checkpoint, ignore_mismatched_sizes=True)
-    model = GPT2LMHeadModel.from_pretrained(args.checkpoint, ignore_mismatched_sizes=True)
+    model = LlamaLMHeadModel.from_pretrained(args.checkpoint, ignore_mismatched_sizes=True)
     model.to(args.device)
 
     if args.local_rank == 0:

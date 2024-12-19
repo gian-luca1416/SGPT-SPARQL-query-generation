@@ -16,7 +16,7 @@ from transformers import (
      get_linear_schedule_with_warmup,
 )
 
-from model.gpt import run_batch_generation, GPT2LMHeadModel
+from model.gpt import run_batch_generation, LlamaLMHeadModel
 
 import os
 from utils.args import (
@@ -224,7 +224,7 @@ def main():
     parser = argparse.ArgumentParser()
 
     # Required parameters
-    parser.add_argument("--params_file", type=str, default="config/gpt-2-base/params.json", help="JSON configuration file")
+    parser.add_argument("--params_file", type=str, default="config/llama-base/params.json", help="JSON configuration file")
     parser.add_argument("--eval_only", action="store_true",
                         help="Perform evaluation only")
     parser.add_argument("--checkpoint", type=str, help="Saved checkpoint directory")
@@ -259,7 +259,7 @@ def main():
 
     parser.add_argument('--generate', action='store_true')
     parser.add_argument("--decode", type=str, default="basic", choices=["basic","beam"], help="decoding technique")
-    parser.add_argument("--generation_params_file", type=str, default="config/gpt-2-base/generation_params.json",
+    parser.add_argument("--generation_params_file", type=str, default="config/llama-base/generation_params.json",
                         help="JSON configuration file for generation-related configurations.")
 
     args = parser.parse_args()
@@ -315,7 +315,7 @@ def main():
     set_seed(args)
     args.train_batch_size = 2
 
-    dataset_class, model_class, run_batch_fn_train, run_batch_fn_eval = Dataset, GPT2LMHeadModel, run_batch_generation, run_batch_generation
+    dataset_class, model_class, run_batch_fn_train, run_batch_fn_eval = Dataset, LlamaLMHeadModel, run_batch_generation, run_batch_generation
 
     if args.eval_only:
         pass
@@ -569,7 +569,7 @@ def main_ewo(args, model, tokenizer):
 
     #args.output_dir = args.checkpoint
     #tokenizer = AutoTokenizer.from_pretrained(args.checkpoint, ignore_mismatched_sizes=True)
-    #model = GPT2LMHeadModel.from_pretrained(args.checkpoint, ignore_mismatched_sizes=True)
+    #model = LlamaLMHeadModel.from_pretrained(args.checkpoint, ignore_mismatched_sizes=True)
     model.to(args.device)
 
     if args.local_rank == 0:
@@ -588,4 +588,3 @@ def main_ewo(args, model, tokenizer):
 if __name__=="__main__":
     args, model, tokenizer = main()
     main_ewo(args, model, tokenizer)
-
