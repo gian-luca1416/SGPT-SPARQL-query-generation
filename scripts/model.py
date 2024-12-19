@@ -352,8 +352,8 @@ class GPT2Model(LlamaForCausalLM):
         self.drop = nn.Dropout(0.1) # TODO find it in config
         self.h = nn.ModuleList([Block(config.max_position_embeddings, config, scale=True) for _ in range(config.num_hidden_layers)])
         self.ln_f = nn.LayerNorm(config.hidden_size, eps=config.rms_norm_eps)
-        n_head = 8
-        n_layers = 6
+        n_head = 32
+        n_layers = 16
         self.pad_idx = config.vocab_size
         d_k = config.hidden_size // n_head
         d_v = config.hidden_size // n_head
@@ -493,7 +493,7 @@ class GPT2Model(LlamaForCausalLM):
 
 
         if inputs_embeds is None:
-            input_ids = torch.clamp(input_ids, max=128256 - 1)
+            #input_ids = torch.clamp(input_ids, max=128256 - 1)
             inputs_embeds = self.wte(input_ids)
         position_ids = position_ids.view(-1, input_shape[-1])
         position_embeds = self.wpe(position_ids)
