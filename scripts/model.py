@@ -342,7 +342,7 @@ class PositionwiseFeedForward(nn.Module):
 class GPT2Model(LlamaForCausalLM):
     def __init__(self, config=None):
         super().__init__(config)
-        self.wte = nn.Embedding(config.vocab_size, config.hidden_size)
+        self.wte = nn.Embedding(128263, config.hidden_size) #128263 for lcquad, 128261 for qald
         self.wpe = nn.Embedding(config.max_position_embeddings, config.hidden_size)
         self.pose = nn.Embedding(50, config.hidden_size)
         self.dep = nn.Embedding(50, config.hidden_size)
@@ -354,7 +354,7 @@ class GPT2Model(LlamaForCausalLM):
         self.ln_f = nn.LayerNorm(config.hidden_size, eps=config.rms_norm_eps)
         n_head = 32
         n_layers = 16
-        self.pad_idx = config.vocab_size
+        self.pad_idx = 128263
         d_k = config.hidden_size // n_head
         d_v = config.hidden_size // n_head
         d_inner = config.hidden_size * 4

@@ -11,7 +11,7 @@
             "program": "train.py",
             "console": "integratedTerminal",
             "args": [
-                "--dataset=qald9",
+                "--dataset=lcquad2",
                 "--epochs=1"
             ]
         }

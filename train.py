@@ -317,8 +317,6 @@ def main():
         model = model_class.from_pretrained(args.llama_output_path, config=config)
         model.resize_token_embeddings(len(tokenizer))
 
-        print("Tokenizer vocab size:", len(tokenizer))
-        print("Model vocab size:", model.config.vocab_size)
 
     model.to(args.device)
 
