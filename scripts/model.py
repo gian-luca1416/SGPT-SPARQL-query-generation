@@ -150,7 +150,6 @@ class Attention(nn.Module):
         outputs = [a, present] + attn_outputs[1:]
         return outputs  # a, present, (attentions)
 
-
 class MLP(nn.Module):
     def __init__(self, n_state, config):  # in MLP: n_state=3072 (4 * n_embd)
         super().__init__()
@@ -164,7 +163,6 @@ class MLP(nn.Module):
         h = self.act(self.c_fc(x))
         h2 = self.c_proj(h)
         return self.dropout(h2)
-
 
 class Block(nn.Module):
     def __init__(self, n_ctx, config, scale=False):
@@ -195,7 +193,6 @@ class Block(nn.Module):
         outputs = [x] + output_attn[1:]
         return outputs  # x, present, (attentions)
 
-
 class DecoderLayer(nn.Module):
     ''' Compose with three layers '''
 
@@ -219,7 +216,6 @@ class DecoderLayer(nn.Module):
 
         return dec_output, dec_slf_attn, dec_enc_attn
 
-
 class EncoderLayer(nn.Module):
     ''' Compose with two layers '''
 
@@ -237,7 +233,6 @@ class EncoderLayer(nn.Module):
         enc_output *= non_pad_mask
 
         return enc_output, enc_slf_attn
-
 
 class MultiHeadAttention(nn.Module):
     ''' Multi-Head Attention module '''
@@ -294,7 +289,6 @@ class MultiHeadAttention(nn.Module):
 
         return output, attn
 
-
 class ScaledDotProductAttention(nn.Module):
     ''' Scaled Dot-Product Attention '''
 
@@ -318,7 +312,6 @@ class ScaledDotProductAttention(nn.Module):
 
         return output, attn
 
-
 class PositionwiseFeedForward(nn.Module):
     ''' A two-feed-forward-layer module '''
 
@@ -338,24 +331,23 @@ class PositionwiseFeedForward(nn.Module):
         output = self.layer_norm(output + residual)
         return output
 
-
 class LlamaModel(LlamaForCausalLM):
     def __init__(self, config=None):
         super().__init__(config)
+        # this is hard coded, because there is an issue with vocab size and model / tokenizer resizing after adding special tokens
         self.wte = nn.Embedding(128263, config.hidden_size) #128263 for lcquad, 128261 for qald
         self.wpe = nn.Embedding(config.max_position_embeddings, config.hidden_size)
         self.pose = nn.Embedding(50, config.hidden_size)
         self.dep = nn.Embedding(50, config.hidden_size)
         self.depl = nn.Embedding(50, config.hidden_size)
-        #self.kge = KGBlock(config=config)
-        # self.drop = nn.Dropout(config.embd_pdrop)
         self.drop = nn.Dropout(0.1)
         self.h = nn.ModuleList(
             [Block(config.max_position_embeddings, config, scale=True) for _ in range(config.num_hidden_layers)])
         self.ln_f = nn.LayerNorm(config.hidden_size, eps=config.rms_norm_eps)
         n_head = 32
         n_layers = 16
-        self.pad_idx = 128263
+        # this is hard coded, because there is an issue with vocab size and model / tokenizer resizing after adding special tokens
+        self.pad_idx = 128263 #128263 for lcquad, 128261 for qald
         d_k = config.hidden_size // n_head
         d_v = config.hidden_size // n_head
         d_inner = config.hidden_size * 4
@@ -366,9 +358,11 @@ class LlamaModel(LlamaForCausalLM):
             for _ in range(n_layers)])
         self.init_weights()
 
+    # this does not get called with Llama
     def get_input_embeddings(self):
         return self.wte
 
+    # this does not get called with Llama
     def set_input_embeddings(self, new_embeddings):
         self.wte = new_embeddings
 
@@ -492,9 +486,7 @@ class LlamaModel(LlamaForCausalLM):
         # head_mask has shape n_layer x batch x n_heads x N x N
         head_mask = self.get_head_mask(head_mask, self.config.num_hidden_layers)
 
-
         if inputs_embeds is None:
-            #input_ids = torch.clamp(input_ids, max=128256 - 1)
             inputs_embeds = self.wte(input_ids)
         position_ids = position_ids.view(-1, input_shape[-1])
         position_embeds = self.wpe(position_ids)
@@ -562,8 +554,6 @@ class LlamaModel(LlamaForCausalLM):
             all_attentions = tuple(t.view(*attention_output_shape) for t in all_attentions)
             outputs = outputs + (all_attentions,)
         return outputs  # last hidden state, (presents), (all hidden_states), (attentions)
-
-
 
 class LlamaLMHeadModel(LlamaForCausalLM):
     def __init__(self, config=None):
@@ -634,8 +624,6 @@ class LlamaLMHeadModel(LlamaForCausalLM):
 
         return outputs  # (loss), lm_logits, presents, (all hidden_states), (attentions)
 
-
-
 def run_batch_generation(args, model, batch):
     batch = tuple(input_tensor.long().to(args.device) for input_tensor in batch)
     input_ids, pos_ids, postag_ids, dep_ids, dep_lvl, lm_labels = batch
@@ -648,7 +636,6 @@ def run_batch_generation(args, model, batch):
     loss = model_outputs[0]
     lm_logits = model_outputs[1]
     return loss, lm_logits, torch.tensor([]), torch.tensor([])
-
 
 def top_filtering(logits, top_k=0, top_p=0.0, threshold=-float('Inf'), filter_value=-float('Inf')):
     """ Filter a distribution of logits using top-k, top-p (nucleus) and/or threshold filtering
@@ -686,7 +673,6 @@ def top_filtering(logits, top_k=0, top_p=0.0, threshold=-float('Inf'), filter_va
     logits[indices_to_remove] = filter_value
 
     return logits
-
 
 def decode_sample(args, model, batch, dataset):       # decoding function
     special_tokens_ids = args.tokenizer.convert_tokens_to_ids(dataset.SPECIAL_TOKENS_VALUES)
