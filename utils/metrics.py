@@ -363,12 +363,15 @@ class Rouge:
         token_c = candidate.split()
 
         for reference in refs:
-            # split into tokens
-            token_r = reference.split()
-            # compute the longest common subsequence
-            lcs = my_lcs(token_r, token_c)
-            prec.append(lcs / float(len(token_c)))
-            rec.append(lcs / float(len(token_r)))
+            try:
+                # split into tokens
+                token_r = reference.split()
+                # compute the longest common subsequence
+                lcs = my_lcs(token_r, token_c)
+                prec.append(lcs / float(len(token_c)))
+                rec.append(lcs / float(len(token_r)))
+            except:
+                pass
 
         prec_max = max(prec)
         rec_max = max(rec)

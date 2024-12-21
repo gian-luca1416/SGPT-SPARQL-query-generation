@@ -8,13 +8,13 @@ from os.path import join
 import json
 
 SPECIAL_TOKENS = {
-    "bos_token": "<|endoftext|>",
-    "eos_token": "<|endoftext|>",
-    "pad_token": "[PAD]",
-"additional_special_tokens": ["[Q]","[SUB]","[QUERY]"],
+    "bos_token": "<s>",
+    "eos_token": "</s>",
+    "pad_token": "<pad>",
+    "additional_special_tokens": ["[Q]","[SUB]","[QUERY]"],
 }
 
-SPECIAL_TOKENS_VALUES = ["[BOS]", "[EOS]", "[PAD]", "[Q]","[SUB]","[QUERY]"]
+SPECIAL_TOKENS_VALUES = ["<s>", "</s>", "<pad>", "[Q]","[SUB]","[QUERY]"]
 
 class BaseDataset(Dataset):
     def __init__(self, args, tokenizer, name, split_type, masked=None, eval_partial=None):
